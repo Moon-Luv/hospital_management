@@ -34,7 +34,7 @@ SECRET_KEY = 'django-insecure-jgzy6bsqerg%7zd8k)^b_nqq0i&9ogoqkwxci5&_gm%#x32h=$
 DEBUG = False
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = ['https://hospital-management-gp1l.onrender.com']
-SECURE_SSL_REDIRECT = True  # Optional
+# SECURE_SSL_REDIRECT = True  # Optional
 
 
 
