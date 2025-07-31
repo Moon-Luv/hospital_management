@@ -31,9 +31,10 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = 'django-insecure-jgzy6bsqerg%7zd8k)^b_nqq0i&9ogoqkwxci5&_gm%#x32h=$'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ["*"]  # Replace with your actual Render domain
+DEBUG = False
+ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = ['https://hospital-management-gp1l.onrender.com']
+SECURE_SSL_REDIRECT = True  # Optional
 
 
 
