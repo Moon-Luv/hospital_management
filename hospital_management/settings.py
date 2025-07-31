@@ -100,11 +100,12 @@ WSGI_APPLICATION = 'hospital_management.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL'),
+        default='postgresql://hostpital_user:hIxJS0iR1MbGJhY0RSI2tTjpsT3CA5Kb@dpg-d25kvenfte5s7389dh50-a.oregon-postgres.render.com/hostpital',
         conn_max_age=600,
         ssl_require=True
     )
 }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
