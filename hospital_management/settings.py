@@ -152,8 +152,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'  # ✅ Required for collectstatic in prod
 # media file Configuring
 # Base url to serve media files
 MEDIA_URL = '/media/'
-# Path where media is stored'
-# MEDIA_ROOT = BASE_DIR / 'media' # if we want to store inside a app. then we can ignore this line of code.
+MEDIA_ROOT = BASE_DIR / 'media'  # or os.path.join(BASE_DIR, 'media')
 
 
 # Default primary key field type
