@@ -36,7 +36,13 @@ ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = ['https://hospital-management-gp1l.onrender.com']
 # SECURE_SSL_REDIRECT = True  # Optional
 
-
+# Don't use wildcard when credentials are included
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:5500",  # local dev frontend
+    "https://your-frontend.com"  # production frontend
+]
+# Allow cookies / Authorization headers in cross-site requests
+CORS_ALLOW_CREDENTIALS = True
 
 # Application definition
 
@@ -64,17 +70,20 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+
+    # CORS must be placed here, before CommonMiddleware
+    'corsheaders.middleware.CorsMiddleware',
+
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # Third party
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
+
     'whitenoise.middleware.WhiteNoiseMiddleware'
 ]
+
 
 ROOT_URLCONF = 'hospital_management.urls'
 
