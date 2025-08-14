@@ -1,0 +1,2555 @@
+openapi: 3.0.3
+info:
+  title: Hospital Management System API
+  description: |
+    API documentation for the Hospital Management System.
+    This API allows for managing users, patients, doctors, appointments, services, and contact requests.
+  version: 1.0.0
+  contact:
+    name: Hospital Management System Support
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from the /api/user/login/ endpoint
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        is_staff:
+          type: boolean
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+        - username
+        - email
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          $ref: '#/components/schemas/User'
+          readOnly: true
+        bio:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        profile_picture:
+          type: string
+          format: uri
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    Patient:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: string
+          readOnly: true
+        profile:
+          type: string
+          format: uri
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+
+    Doctor:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: string
+          readOnly: true
+        profile:
+          type: string
+          format: uri
+          nullable: true
+        designation:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        specialisation:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        available_time:
+          type: array
+          items:
+            type: integer
+        fee:
+          type: integer
+        meet_link:
+          type: string
+          nullable: true
+
+    Designation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+        slug:
+          type: string
+      required:
+        - name
+        - slug
+
+    Specialisation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+        slug:
+          type: string
+      required:
+        - name
+        - slug
+
+    AvailableTime:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        time:
+          type: string
+      required:
+        - time
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        reviewer:
+          type: string
+          readOnly: true
+        doctor_name:
+          type: string
+          readOnly: true
+        body:
+          type: string
+        created_on:
+          type: string
+          format: date
+          readOnly: true
+        rating:
+          type: string
+          enum: ["⭐", "⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐⭐⭐"]
+      required:
+        - doctor
+        - body
+        - rating
+
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        patient:
+          type: integer
+          readOnly: true
+        doctor:
+          type: integer
+        appointment_type:
+          type: string
+          enum: ["Online", "Offline"]
+        appointment_status:
+          type: string
+          enum: ["Pendding", "Runing", "Complated"]
+          readOnly: true
+          default: "Pendding"
+        symptoms:
+          type: string
+        time:
+          type: integer
+        cancel:
+          type: boolean
+          default: false
+      required:
+        - doctor
+        - appointment_type
+        - symptoms
+        - time
+
+    Service:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        image:
+          type: string
+          format: uri
+        name:
+          type: string
+        description:
+          type: string
+      required:
+        - image
+        - name
+        - description
+
+    ContactUs:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+        phone:
+          type: string
+        massage:
+          type: string
+      required:
+        - name
+        - phone
+        - massage
+
+    RegistrationRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        confirm_password:
+          type: string
+          format: password
+      required:
+        - username
+        - email
+        - password
+        - confirm_password
+
+    RegistrationResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        tokens:
+          type: object
+          properties:
+            refresh:
+              type: string
+            access:
+              type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+      required:
+        - username
+        - password
+
+    LoginResponse:
+      type: object
+      properties:
+        refresh:
+          type: string
+        access:
+          type: string
+
+    LogoutRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+      required:
+        - refresh
+
+    LogoutResponse:
+      type: object
+      properties:
+        message:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+
+    FieldError:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+
+paths:
+  /api/user/register/:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Register a new user. A UserProfile and Patient instance will be automatically created.
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+
+  /api/user/login/:
+    post:
+      tags:
+        - Authentication
+      summary: Login a user
+      description: Authenticate a user and obtain tokens
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/user/logout/:
+    post:
+      tags:
+        - Authentication
+      summary: Logout a user
+      description: Blacklist the refresh token
+      operationId: logoutUser
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+      responses:
+        '205':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+        '400':
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/user/token/refresh/:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: Get a new access token using a refresh token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh:
+                  type: string
+              required:
+                - refresh
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access:
+                    type: string
+        '401':
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/user/profiles/:
+    get:
+      tags:
+        - User Profiles
+      summary: List user profiles
+      description: Get a list of user profiles. Regular users can only see their own profile.
+      operationId: listUserProfiles
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limits
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+        - name: search
+          in: query
+          description: Search term for username, email, first_name, or last_name
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of user profiles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  next:
+                    type: string
+                    nullable: true
+                    format: uri
+                  previous:
+                    type: string
+                    nullable: true
+                    format: uri
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - User Profiles
+      summary: Create a user profile
+      description: Create a new user profile
+      operationId: createUserProfile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                bio:
+                  type: string
+                address:
+                  type: string
+                date_of_birth:
+                  type: string
+                  format: date
+                profile_picture:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: User profile created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/user/profiles/{id}/:
+    parameters:
+      - name: id
+        in: path
+        description: ID of the user profile
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - User Profiles
+      summary: Get a user profile
+      description: Get a specific user profile by ID
+      operationId: getUserProfile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Contacts
+      summary: Update a contact
+      description: Update a specific contact by ID
+      operationId: updateContact
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactUs'
+      responses:
+        '200':
+          description: Contact updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactUs'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags:
+        - Contacts
+      summary: Partially update a contact
+      description: Partially update a specific contact by ID
+      operationId: partialUpdateContact
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactUs'
+      responses:
+        '200':
+          description: Contact updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactUs'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Contacts
+      summary: Delete a contact
+      description: Delete a specific contact by ID
+      operationId: deleteContact
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Contact deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - User Profiles
+      summary: Update a user profile
+      description: Update a specific user profile by ID
+      operationId: updateUserProfile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                bio:
+                  type: string
+                address:
+                  type: string
+                date_of_birth:
+                  type: string
+                  format: date
+                profile_picture:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: User profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags:
+        - User Profiles
+      summary: Partially update a user profile
+      description: Partially update a specific user profile by ID
+      operationId: partialUpdateUserProfile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                bio:
+                  type: string
+                address:
+                  type: string
+                date_of_birth:
+                  type: string
+                  format: date
+                profile_picture:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: User profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - User Profiles
+      summary: Delete a user profile
+      description: Delete a specific user profile by ID
+      operationId: deleteUserProfile
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: User profile deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/user/profiles/me/:
+    get:
+      tags:
+        - User Profiles
+      summary: Get current user's profile
+      description: Get the profile of the currently authenticated user
+      operationId: getCurrentUserProfile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user's profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /patients/:
+    get:
+      tags:
+        - Patients
+      summary: List patients
+      description: Get a list of patients
+      operationId: listPatients
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limits
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+        - name: search
+          in: query
+          description: Search term for id, user, or phone
+          required: false
+          schema:
+            type: string
+        - name: phone
+          in: query
+          description: Filter by phone number
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of patients
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  next:
+                    type: string
+                    nullable: true
+                    format: uri
+                  previous:
+                    type: string
+                    nullable: true
+                    format: uri
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Patient'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Patients
+      summary: Create a patient
+      description: Create a new patient
+      operationId: createPatient
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                profile:
+                  type: string
+                  format: binary
+                phone:
+                  type: string
+      responses:
+        '201':
+          description: Patient created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /patients/{id}/:
+    parameters:
+      - name: id
+        in: path
+        description: ID of the patient
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Patients
+      summary: Get a patient
+      description: Get a specific patient by ID
+      operationId: getPatient
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Patient details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Patients
+      summary: Update a patient
+      description: Update a specific patient by ID
+      operationId: updatePatient
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                profile:
+                  type: string
+                  format: binary
+                phone:
+                  type: string
+      responses:
+        '200':
+          description: Patient updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags:
+        - Patients
+      summary: Partially update a patient
+      description: Partially update a specific patient by ID
+      operationId: partialUpdatePatient
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                profile:
+                  type: string
+                  format: binary
+                phone:
+                  type: string
+      responses:
+        '200':
+          description: Patient updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Patients
+      summary: Delete a patient
+      description: Delete a specific patient by ID
+      operationId: deletePatient
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Patient deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /doctors/:
+    get:
+      tags:
+        - Doctors
+      summary: List doctors
+      description: Get a list of doctors
+      operationId: listDoctors
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limits
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+        - name: specialisation
+          in: query
+          description: Filter by specialisation
+          required: false
+          schema:
+            type: integer
+        - name: designation
+          in: query
+          description: Filter by designation
+          required: false
+          schema:
+            type: integer
+        - name: fee
+          in: query
+          description: Filter by fee
+          required: false
+          schema:
+            type: integer
+        - name: available_time
+          in: query
+          description: Filter by available time
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of doctors
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  next:
+                    type: string
+                    nullable: true
+                    format: uri
+                  previous:
+                    type: string
+                    nullable: true
+                    format: uri
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Doctor'
+    post:
+      tags:
+        - Doctors
+      summary: Create a doctor
+      description: Create a new doctor
+      operationId: createDoctor
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                profile:
+                  type: string
+                  format: binary
+                designation:
+                  type: array
+                  items:
+                    type: integer
+                specialisation:
+                  type: array
+                  items:
+                    type: integer
+                available_time:
+                  type: array
+                  items:
+                    type: integer
+                fee:
+                  type: integer
+                meet_link:
+                  type: string
+              required:
+                - fee
+      responses:
+        '201':
+          description: Doctor created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Doctor'
+        '400':
+          description: Invalid input or user already has a doctor account
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/FieldError'
+                  - type: object
+                    properties:
+                      error:
+                        type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /doctors/{id}/:
+    parameters:
+      - name: id
+        in: path
+        description: ID of the doctor
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Doctors
+      summary: Get a doctor
+      description: Get a specific doctor by ID
+      operationId: getDoctor
+      responses:
+        '200':
+          description: Doctor details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Doctor'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Doctors
+      summary: Update a doctor
+      description: Update a specific doctor by ID
+      operationId: updateDoctor
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                profile:
+                  type: string
+                  format: binary
+                designation:
+                  type: array
+                  items:
+                    type: integer
+                specialisation:
+                  type: array
+                  items:
+                    type: integer
+                available_time:
+                  type: array
+                  items:
+                    type: integer
+                fee:
+                  type: integer
+                meet_link:
+                  type: string
+      responses:
+        '200':
+          description: Doctor updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Doctor'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags:
+        - Doctors
+      summary: Partially update a doctor
+      description: Partially update a specific doctor by ID
+      operationId: partialUpdateDoctor
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                profile:
+                  type: string
+                  format: binary
+                designation:
+                  type: array
+                  items:
+                    type: integer
+                specialisation:
+                  type: array
+                  items:
+                    type: integer
+                available_time:
+                  type: array
+                  items:
+                    type: integer
+                fee:
+                  type: integer
+                meet_link:
+                  type: string
+      responses:
+        '200':
+          description: Doctor updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Doctor'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Doctors
+      summary: Delete a doctor
+      description: Delete a specific doctor by ID
+      operationId: deleteDoctor
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Doctor deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /designations/:
+    get:
+      tags:
+        - Designations
+      summary: List designations
+      description: Get a list of designations
+      operationId: listDesignations
+      responses:
+        '200':
+          description: List of designations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Designation'
+    post:
+      tags:
+        - Designations
+      summary: Create a designation
+      description: Create a new designation (admin only)
+      operationId: createDesignation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Designation'
+      responses:
+        '201':
+          description: Designation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Designation'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /specialisations/:
+    get:
+      tags:
+        - Specialisations
+      summary: List specialisations
+      description: Get a list of specialisations
+      operationId: listSpecialisations
+      responses:
+        '200':
+          description: List of specialisations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Specialisation'
+    post:
+      tags:
+        - Specialisations
+      summary: Create a specialisation
+      description: Create a new specialisation (admin only)
+      operationId: createSpecialisation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Specialisation'
+      responses:
+        '201':
+          description: Specialisation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Specialisation'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /available-time/:
+    get:
+      tags:
+        - Available Times
+      summary: List available times
+      description: Get a list of available times
+      operationId: listAvailableTimes
+      parameters:
+        - name: id
+          in: query
+          description: Filter by ID
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of available times
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AvailableTime'
+    post:
+      tags:
+        - Available Times
+      summary: Create an available time
+      description: Create a new available time (admin only)
+      operationId: createAvailableTime
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailableTime'
+      responses:
+        '201':
+          description: Available time created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailableTime'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /reviews/:
+    get:
+      tags:
+        - Reviews
+      summary: List reviews
+      description: Get a list of reviews
+      operationId: listReviews
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limits
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+        - name: doctor
+          in: query
+          description: Filter by doctor ID
+          required: false
+          schema:
+            type: integer
+        - name: reviwer
+          in: query
+          description: Filter by reviewer ID
+          required: false
+          schema:
+            type: integer
+        - name: rating
+          in: query
+          description: Filter by rating
+          required: false
+          schema:
+            type: string
+            enum: ["⭐", "⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐⭐⭐"]
+        - name: search
+          in: query
+          description: Search term for doctor or reviewer
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of reviews
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  next:
+                    type: string
+                    nullable: true
+                    format: uri
+                  previous:
+                    type: string
+                    nullable: true
+                    format: uri
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Review'
+    post:
+      tags:
+        - Reviews
+      summary: Create a review
+      description: Create a new review
+      operationId: createReview
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                doctor:
+                  type: integer
+                body:
+                  type: string
+                rating:
+                  type: string
+                  enum: ["⭐", "⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐⭐⭐"]
+              required:
+                - doctor
+                - body
+                - rating
+      responses:
+        '201':
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /reviews/{id}/:
+    parameters:
+      - name: id
+        in: path
+        description: ID of the review
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Reviews
+      summary: Get a review
+      description: Get a specific review by ID
+      operationId: getReview
+      responses:
+        '200':
+          description: Review details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Reviews
+      summary: Update a review
+      description: Update a specific review by ID
+      operationId: updateReview
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                doctor:
+                  type: integer
+                body:
+                  type: string
+                rating:
+                  type: string
+                  enum: ["⭐", "⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐⭐⭐"]
+              required:
+                - doctor
+                - body
+                - rating
+      responses:
+        '200':
+          description: Review updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags:
+        - Reviews
+      summary: Partially update a review
+      description: Partially update a specific review by ID
+      operationId: partialUpdateReview
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                doctor:
+                  type: integer
+                body:
+                  type: string
+                rating:
+                  type: string
+                  enum: ["⭐", "⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐⭐⭐"]
+      responses:
+        '200':
+          description: Review updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Reviews
+      summary: Delete a review
+      description: Delete a specific review by ID
+      operationId: deleteReview
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Review deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /appointments/:
+    get:
+      tags:
+        - Appointments
+      summary: List appointments
+      description: Get a list of appointments
+      operationId: listAppointments
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limits
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+        - name: patient_id
+          in: query
+          description: Filter by patient ID
+          required: false
+          schema:
+            type: integer
+        - name: doctor_id
+          in: query
+          description: Filter by doctor ID
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of appointments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  next:
+                    type: string
+                    nullable: true
+                    format: uri
+                  previous:
+                    type: string
+                    nullable: true
+                    format: uri
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Appointment'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Appointments
+      summary: Create an appointment
+      description: Create a new appointment. The patient field is automatically set to the authenticated user.
+      operationId: createAppointment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                doctor:
+                  type: integer
+                appointment_type:
+                  type: string
+                  enum: ["Online", "Offline"]
+                symptoms:
+                  type: string
+                time:
+                  type: integer
+                cancel:
+                  type: boolean
+                  default: false
+              required:
+                - doctor
+                - appointment_type
+                - symptoms
+                - time
+      responses:
+        '201':
+          description: Appointment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /appointments/{id}/:
+    parameters:
+      - name: id
+        in: path
+        description: ID of the appointment
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Appointments
+      summary: Get an appointment
+      description: Get a specific appointment by ID
+      operationId: getAppointment
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Appointment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Appointments
+      summary: Update an appointment
+      description: Update a specific appointment by ID
+      operationId: updateAppointment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                doctor:
+                  type: integer
+                appointment_type:
+                  type: string
+                  enum: ["Online", "Offline"]
+                symptoms:
+                  type: string
+                time:
+                  type: integer
+                cancel:
+                  type: boolean
+              required:
+                - doctor
+                - appointment_type
+                - symptoms
+                - time
+      responses:
+        '200':
+          description: Appointment updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags:
+        - Appointments
+      summary: Partially update an appointment
+      description: Partially update a specific appointment by ID
+      operationId: partialUpdateAppointment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                doctor:
+                  type: integer
+                appointment_type:
+                  type: string
+                  enum: ["Online", "Offline"]
+                symptoms:
+                  type: string
+                time:
+                  type: integer
+                cancel:
+                  type: boolean
+      responses:
+        '200':
+          description: Appointment updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Appointments
+      summary: Delete an appointment
+      description: Delete a specific appointment by ID
+      operationId: deleteAppointment
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Appointment deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /services/:
+    get:
+      tags:
+        - Services
+      summary: List services
+      description: Get a list of services
+      operationId: listServices
+      responses:
+        '200':
+          description: List of services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Service'
+    post:
+      tags:
+        - Services
+      summary: Create a service
+      description: Create a new service
+      operationId: createService
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                name:
+                  type: string
+                description:
+                  type: string
+              required:
+                - image
+                - name
+                - description
+      responses:
+        '201':
+          description: Service created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /services/{id}/:
+    parameters:
+      - name: id
+        in: path
+        description: ID of the service
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Services
+      summary: Get a service
+      description: Get a specific service by ID
+      operationId: getService
+      responses:
+        '200':
+          description: Service details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Services
+      summary: Update a service
+      description: Update a specific service by ID
+      operationId: updateService
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                name:
+                  type: string
+                description:
+                  type: string
+              required:
+                - image
+                - name
+                - description
+      responses:
+        '200':
+          description: Service updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags:
+        - Services
+      summary: Partially update a service
+      description: Partially update a specific service by ID
+      operationId: partialUpdateService
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Service updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Services
+      summary: Delete a service
+      description: Delete a specific service by ID
+      operationId: deleteService
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Service deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /contacts/:
+    get:
+      tags:
+        - Contacts
+      summary: List contacts
+      description: Get a list of contacts
+      operationId: listContacts
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of contacts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContactUs'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Contacts
+      summary: Create a contact
+      description: Create a new contact
+      operationId: createContact
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactUs'
+      responses:
+        '201':
+          description: Contact created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactUs'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /contacts/{id}/:
+    parameters:
+      - name: id
+        in: path
+        description: ID of the contact
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Contacts
+      summary: Get a contact
+      description: Get a specific contact by ID
+      operationId: getContact
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Contact details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactUs'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application
