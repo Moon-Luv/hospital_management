@@ -42,5 +42,6 @@ class Review(models.Model):
     created_on = models.DateField(auto_now_add=True)
     rating = models.IntegerField(choices=RATING_CHOICES)
 
-    def __str__(self) -> str:
-        return self.rating
+    def __str__(self):
+        return f"Review by {self.reviwer} for Dr. {self.doctor} - {self.rating}★"
+
