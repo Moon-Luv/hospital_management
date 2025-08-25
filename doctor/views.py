@@ -56,3 +56,5 @@ class ReviewViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['doctor', 'reviwer', 'rating']
     search_fields = ['doctor', 'reviwer']
+    def perform_create(self, serializer):
+        serializer.save(patient=self.request.user.patient)
