@@ -44,8 +44,7 @@ class AvailableTimeSerializer(serializers.ModelSerializer):
         
 class ReviewSerializer(serializers.ModelSerializer):
     reviewer = serializers.CharField(source='reviwer.user.first_name', read_only=True)
-    doctor_name = serializers.CharField(source='doctor.user.first_name', read_only=True)
 
     class Meta:
         model = Review
-        fields = ['id', 'reviewer', 'doctor_name', 'rating', 'body', 'created_on']
+        fields = ['id', 'reviewer', 'doctor', 'rating', 'body', 'created_on']
