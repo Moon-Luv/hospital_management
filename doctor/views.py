@@ -57,4 +57,4 @@ class ReviewViewSet(viewsets.ModelViewSet):
     filterset_fields = ['doctor', 'reviwer', 'rating']
     search_fields = ['doctor', 'reviwer']
     def perform_create(self, serializer):
-        serializer.save(patient=self.request.user.patient)
+        serializer.save(reviewer=self.request.user.patient)
